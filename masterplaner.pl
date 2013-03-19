@@ -296,7 +296,9 @@ for (sort {$orders{$a} cmp $orders{$b}} keys %orders) {
 		}
 		print $marching_orders "$player keys\n";
 		for (sort { $keys{$b} <=> $keys{$a}} keys %keys) {
-			print $marching_orders "$keys{$_} \t $_\n";
+			print $marching_orders "$keys{$_} \t $_";
+			print $marching_orders " (" . $portals{$_->{target}}->{nick} . ")" if $portals{$_->{target}}->{nick} ne "";
+			print $marching_orders "\n";
 		}
 		print $marching_orders "\n";
 
