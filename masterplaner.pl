@@ -21,9 +21,10 @@ use strict;
 use warnings;
 use Math::Geometry::Delaunay qw(TRI_CCDT);
 use Scalar::Util qw(looks_like_number);
+use SVG;
 
 # Players in descending order of preference
-my @player_prefs = ( '' );
+my @player_prefs = ( 'Justin' );
 
 my @file = <>;
 
@@ -232,7 +233,7 @@ print "     </LabelStyle>\n";
 print "   </Style>\n";
 
 # Load all portal markers.
-for (keys %portals) {
+for (sort keys %portals) {
 	print "   <Placemark>\n";
 	print "     <name>$_</name>\n";
 	print "     <styleUrl>#Portal</styleUrl>\n";
@@ -242,7 +243,7 @@ for (keys %portals) {
 	print "   </Placemark>\n";
 }
 
-for my $source (keys %orders){
+for my $source (sort keys %orders){
 	for (@{$orders{$source}}) {
 	print "  <Placemark>\n";
 	print "    <Snippet></Snippet>\n";
@@ -271,19 +272,30 @@ for my $source (keys %orders){
 print "</Document>\n";
 print "</kml>\n";
 
+
+#Textual Description output
 open my $marching_orders, '>', 'orders.txt';
-for (sort {$orders{$a} cmp $orders{$b}} keys %orders) {
-	print $marching_orders "From Portal $_";
+for (sort keys %portals) {
+	print $marching_orders "$_";
 	print $marching_orders " (" . $portals{$_}->{nick} . ")" if $portals{$_}->{nick} ne "";
 	print $marching_orders "\n";
+if (defined (@{$orders{$_}})) {
 	for (@{$orders{$_}}) {
 		next unless defined $_->{'player'};
-		print $marching_orders "- ". $_->{'player'} . " link to " . $_->{'target'} ;
+		print $marching_orders "  -> " . $_->{'target'} ;
 		print $marching_orders " (" . $portals{$_->{target}}->{nick} . ")" if $portals{$_->{target}}->{nick} ne "";
+		print $marching_orders " [" . $_->{'player'} . "]";
 		print $marching_orders "\n";
 	}
+
+	}
+else {
+	print $marching_orders "  ! No Outgoing Links !\n";
+}
+
 	print $marching_orders "\n";
 	}
+
 	print $marching_orders "Keys Consumed\n";
 	for my $player (keys %players) {
 		my %keys;
@@ -295,15 +307,109 @@ for (sort {$orders{$a} cmp $orders{$b}} keys %orders) {
 			}
 		}
 		print $marching_orders "$player keys\n";
-		for (sort { $keys{$b} <=> $keys{$a}} keys %keys) {
+		for (sort keys %keys) {
 			print $marching_orders "$keys{$_} \t $_";
-			print $marching_orders " (" . $portals{$_->{target}}->{nick} . ")" if $portals{$_->{target}}->{nick} ne "";
+			print $marching_orders " (" . $portals{$_}->{nick} . ")" if $portals{$_}->{nick} ne "";
 			print $marching_orders "\n";
 		}
 		print $marching_orders "\n";
 
 }
 
+#SVG Output
+
+# Find top North most point
+# Find West most point
+# Find southmost point
+# find eastmost point
+# Add westmost to all X cords
+# subtract all Y cords from northmost 
+# Scale up by a factor of: $imagesize / the larger of eastmost or southmost
+my $northmost =0;
+my $westmost=360;
+my $southmost=100;
+my $eastmost=-360;
+my $imagesize = 1000;
+my $imgwidth;
+my $imgheight;
+
+# Calculate the image bounds.
+for my $portal (keys %portals) {
+	$northmost = $portals{$portal}->{y_cord} if $portals{$portal}->{y_cord} > $northmost;
+	$southmost = $portals{$portal}->{y_cord} if $portals{$portal}->{y_cord} < $southmost;
+	$eastmost = $portals{$portal}->{x_cord} if $portals{$portal}->{x_cord} > $eastmost;
+	$westmost = $portals{$portal}->{x_cord} if $portals{$portal}->{x_cord} < $westmost;
+}
+
+# Calculate Image size and scaling.
+	my $scaley = $imagesize / ($eastmost - $westmost) * 1.15;
+	my $scalex = $imagesize / ($southmost - $northmost) * -1;
+	$imgheight = $scaley * ($southmost - $northmost) *-1;
+	$imgwidth = $scalex * ($eastmost - $westmost);
+my $svg= SVG->new(width=>$imgwidth,height=>$imgheight, style=>{background=>'white'});
+
+my $m = $svg->marker(
+	id => 'Tri',
+	viewBox => "0 0 20 20", 
+	refX => "0", 
+	refY => "10", 
+	markerUnits => "strokeWidth",
+	markerWidth => "8", 
+	markerHeight => "6", 
+	orient => "auto",
+	);
+$m->tag(
+	'path',
+	d => "M 0 0 L 20 10 L 0 20 z"
+	);
+
+
+my %groups;
+for my $player (keys %players) {
+	$groups{$player} = $svg->group (
+		id => "group_$player",
+		style => { stroke=> '#'.$players{$player}, 'stroke-width'=>'0.5', 'marker-mid' => 'url(#Tri)'});
+}
+
+my $y=$svg->group(
+    id    => 'group_y',
+    style => { stroke=>'red', 'stroke-width'=>'0.05', 'marker-mid' => 'url(#Tri)' }
+);
+
+my $lineid = 1;
+for my $source (sort keys %portals) {
+if (defined (@{$orders{$source}})) {
+	for (@{$orders{$source}}) {
+		next unless defined $_->{'player'};
+
+			my $x1 = ((-1 * $westmost) + $portals{$source}->{x_cord}) * $scalex;
+			my $y1 = ($northmost - $portals{$source}->{y_cord}) * $scaley;
+
+			my $x3 = ((-1 * $westmost) + $portals{$_->{'target'}}->{x_cord}) * $scalex;
+			my $y3 = ($northmost - $portals{$_->{'target'}}->{y_cord}) * $scaley;
+
+			my $x2 = $x1 + 0.5 * ($x3 - $x1);
+			my $y2 = $y1 + 0.5 * ($y3 - $y1);
+
+			my $xv = [$x1,$x2,$x3];
+			my $yv = [$y1,$y2,$y3];
+
+			my $points = $svg->get_path(
+			x=>$xv, y=>$yv,
+			-type=>'polyline',
+			-closed=>'true');
+			
+			$groups{$_->{'player'}}->polyline (
+				%$points,
+				id => $lineid,
+			 );
+		$lineid++;
+	}
+}
+}
+
+open my $pic, '>', 'mesh.svg';
+print $pic $svg->xmlify;
+close $pic;
+
 exit 0;
-
-
