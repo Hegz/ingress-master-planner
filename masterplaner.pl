@@ -342,7 +342,7 @@ for my $portal (keys %portals) {
 }
 
 # Calculate Image size and scaling.
-	my $scaley = $imagesize / ($eastmost - $westmost) * 1.15;
+	my $scaley = $imagesize / ($eastmost - $westmost) * 1.2;
 	my $scalex = $imagesize / ($southmost - $northmost) * -1;
 	$imgheight = $scaley * ($southmost - $northmost) *-1;
 	$imgwidth = $scalex * ($eastmost - $westmost);
@@ -371,9 +371,9 @@ for my $player (keys %players) {
 		style => { stroke=> '#'.$players{$player}, 'stroke-width'=>'0.5', 'marker-mid' => 'url(#Tri)'});
 }
 
-my $y=$svg->group(
+my $svg_ports=$svg->group(
     id    => 'group_y',
-    style => { stroke=>'red', 'stroke-width'=>'0.05', 'marker-mid' => 'url(#Tri)' }
+    style => { stroke=>'purple', fill=> 'Purple', 'stroke-width'=>'0.05'}
 );
 
 my $lineid = 1;
@@ -406,6 +406,13 @@ if (defined (@{$orders{$source}})) {
 		$lineid++;
 	}
 }
+}
+
+for my $portal (sort keys %portals) {
+	my $x = ((-1 * $westmost) + $portals{$portal}->{x_cord}) * $scalex;
+	my $y = ($northmost - $portals{$portal}->{y_cord}) * $scaley;
+
+	$svg_ports->circle(cx=>$x, cy=>$y, r=>1.5, id=>$portal)
 }
 
 open my $pic, '>', 'mesh.svg';
