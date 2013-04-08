@@ -9,6 +9,8 @@ masterplanner.pl is a simple script that will work from a list of portals
 players, and key counts to build graphical, and textual representation of what
 links can be created and by whom.
 
+See Examples folder for example input and output data.
+
 Currently the CSV file is in the format.
 
     GPS Coords, Ignore, Portal Name, Portal Nickname, P1, P2, P3, etc...
