@@ -24,7 +24,7 @@ use Scalar::Util qw(looks_like_number);
 use SVG;
 
 # Players in descending order of preference
-my @player_prefs = ( 'Justin' );
+my @player_prefs = ( '' );
 
 my @file = <>;
 
@@ -40,7 +40,7 @@ $colours =~ s/#//g;
 
 my @names = split(/,/,$players);
 my @colours = split(/,/,$colours);
-for (my $count = 5; $count >= 1; $count--) {
+for (my $count = 4; $count >= 1; $count--) {
 	shift @names;
 	shift @colours;
 }
@@ -54,8 +54,8 @@ my %portals;
 for (@file) {
 	chomp;
 	s/"//g;
-	my ($x,$y,$name,$nick,$tkeys,$nkeys,@keys) = split(/,/);
-	$portals{$name} = {nick => $nick, x_cord => $x, y_cord => $y};
+	my ($x,$y,$ignore,$name,$nick,@keys) = split(/,/);
+	$portals{$name} = {nick => $nick, x_cord => $x, y_cord => $y, ignore => $ignore};
 	for (my $count = scalar(@names)-1; $count >= 0; $count--) {
 		$portals{$name}->{$names[$count]} = $keys[$count];
 	}
@@ -76,7 +76,9 @@ $tri->triangulate();
 
 my $links = $tri->edges();
 
-my $stats = "Total Number of fields: " . scalar @{$tri->vnodes} . "\n" . "Total Number of Links: " . scalar @{$tri->edges} . "\n";
+my $stats = "Total Number of Portals: " . scalar @points . "\n" .
+            "Total Number of fields: " . scalar @{$tri->vnodes} . "\n" . 
+            "Total Number of Links: " . scalar @{$tri->edges} . "\n";
 
 # Number of Links per player
 my %player_links;
@@ -318,13 +320,6 @@ else {
 
 #SVG Output
 
-# Find top North most point
-# Find West most point
-# Find southmost point
-# find eastmost point
-# Add westmost to all X cords
-# subtract all Y cords from northmost 
-# Scale up by a factor of: $imagesize / the larger of eastmost or southmost
 my $northmost =0;
 my $westmost=360;
 my $southmost=100;
@@ -348,6 +343,7 @@ for my $portal (keys %portals) {
 	$imgwidth = $scalex * ($eastmost - $westmost);
 my $svg= SVG->new(width=>$imgwidth,height=>$imgheight, style=>{background=>'white'});
 
+# Insert Directional Marker
 my $m = $svg->marker(
 	id => 'Tri',
 	viewBox => "0 0 20 20", 
@@ -363,7 +359,7 @@ $m->tag(
 	d => "M 0 0 L 20 10 L 0 20 z"
 	);
 
-
+# Add a group for each player
 my %groups;
 for my $player (keys %players) {
 	$groups{$player} = $svg->group (
@@ -371,11 +367,13 @@ for my $player (keys %players) {
 		style => { stroke=> '#'.$players{$player}, 'stroke-width'=>'0.5', 'marker-mid' => 'url(#Tri)'});
 }
 
+# Portals Group
 my $svg_ports=$svg->group(
     id    => 'group_y',
     style => { stroke=>'purple', fill=> 'Purple', 'stroke-width'=>'0.05'}
 );
 
+# Add in all the lines with a midpoint for the directional Marker
 my $lineid = 1;
 for my $source (sort keys %portals) {
 if (defined (@{$orders{$source}})) {
@@ -402,12 +400,13 @@ if (defined (@{$orders{$source}})) {
 			$groups{$_->{'player'}}->polyline (
 				%$points,
 				id => $lineid,
-			 );
-		$lineid++;
+			 ); 
+		$lineid ++;
 	}
 }
 }
 
+# Add in all the portals
 for my $portal (sort keys %portals) {
 	my $x = ((-1 * $westmost) + $portals{$portal}->{x_cord}) * $scalex;
 	my $y = ($northmost - $portals{$portal}->{y_cord}) * $scaley;
