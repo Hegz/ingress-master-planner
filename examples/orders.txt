@@ -1,0 +1,388 @@
+Albert McGowan Spray Park
+  -> Riverpole-night (Night) [Player2]
+  -> Ponderosa Inukshuk [Player 3]
+
+Alley Art - Archway
+  -> Kamloops Sculpture (Roundabout - Lorne St) [Player 3]
+
+Alley Art - Cityscape
+  -> Kamloops Sculpture (Roundabout - Lorne St) [Player 5]
+  -> Alley Art - Shoe [Player2]
+
+Alley Art - Graffiti
+  -> Kamloops Sculpture (Roundabout - Lorne St) [Player 3]
+  -> Alley Art - Cityscape [Hegz]
+
+Alley Art - Shoe
+  -> Kamloops Sculpture (Roundabout - Lorne St) [Player 4]
+  -> Alley Art - Archway [Player 3]
+
+Alley Art - Spy vs Spy
+  ! No Outgoing Links !
+
+Alley Art - Vista
+  -> Wildfire Memorial [Player2]
+  -> Kamloops Sculpture (Roundabout - Lorne St) [Player2]
+  -> Builders Forest [Player 3]
+  -> Alley Art - Spy vs Spy [Player 5]
+
+Alley Art - Zen
+  -> Kamloops Sculpture (Roundabout - Lorne St) [Player2]
+  -> Alley Art - Spy vs Spy [Hegz]
+  -> Alley Art - Graffiti [Player 4]
+  -> Alley Art - Vista [Hegz]
+
+Arena Mural
+  -> Department of Highways Fountain [Player 3]
+  -> Wildfire Memorial [Hegz]
+  -> Fishbone Riverside [Player2]
+  -> Heritage Railway Caboose [Player2]
+  -> Wall of Honor Fountain [Player 4]
+
+Builders Forest
+  -> Wildfire Memorial [Player 5]
+  -> Fishbone Riverside [Player 3]
+
+Department of Highways Fountain
+  ! No Outgoing Links !
+
+Fish Statue
+  -> Kenna Cartwright Park Sign [Player 4]
+  -> Riverpole-night (Night) [Player 4]
+  -> Albert McGowan Spray Park [Player2]
+  -> Knutsford Community Hall [Player 5]
+  -> Shopping Penguins [Player2]
+  -> School bell [Hegz]
+
+Fishbone Riverside
+  -> Wildfire Memorial [Player2]
+  -> Moose Park [Player2]
+
+Gaglardi Statue
+  -> Riverpole-night (Night) [Player 5]
+  -> Alley Art - Archway [Player 4]
+  -> Ponderosa Inukshuk [Player 4]
+  -> Kamloops Museum and Archives [Hegz]
+  -> Kamloops sculpture Overlanders [Player 5]
+  -> Kamloops City Hall [Player 5]
+
+Heritage Railway Caboose
+  -> Fishbone Riverside [Player 5]
+
+Hidee Saito Volunteer Memorial
+  -> Uji Way Friendship Garden [Hegz]
+  -> Wizard Graffiti [Hegz]
+  -> Kamloops sculpture (Rock) [Player2]
+  -> Kamloops boat sculpture [Player 4]
+
+Kamloops City Hall
+  -> Riverpole-night (Night) [Player2]
+  -> Kamloops sculpture Overlanders [Hegz]
+  -> Kamloops sculpture (Rock) [Player 4]
+  -> Kamloops boat sculpture [Player 3]
+
+Kamloops Monuments (Water Levels)
+  -> Kamloops Sculpture (Roundabout - Lorne St) [Player 3]
+  -> Moose Park [Player2]
+
+Kamloops Museum and Archives
+  -> Alley Art - Archway [Player 5]
+  -> Ponderosa Inukshuk [Player2]
+  -> Alley Art - Shoe [Player 3]
+
+Kamloops Sculpture (Roundabout - Lorne St)
+  ! No Outgoing Links !
+
+Kamloops boat sculpture
+  -> Uji Way Friendship Garden [Player 4]
+  -> Kamloops sculpture Overlanders [Player2]
+  -> Kamloops sculpture (Rock) [Player2]
+
+Kamloops sculpture (Rock)
+  -> Wizard Graffiti [Hegz]
+
+Kamloops sculpture Overlanders
+  -> Kamloops Sculpture (Roundabout - Lorne St) [Player 4]
+  -> Kamloops Monuments (Water Levels) [Player 3]
+  -> Alley Art - Archway [Hegz]
+
+Kenna Cartwright Park Sign
+  ! No Outgoing Links !
+
+Knutsford Community Hall
+  -> Albert McGowan Spray Park [Player2]
+
+Mayors_Grove
+  -> Kamloops Sculpture (Roundabout - Lorne St) [Player 5]
+  -> Moose Park [Player 5]
+  -> Kamloops Monuments (Water Levels) [Hegz]
+  -> Fishbone Riverside [Player2]
+  -> Builders Forest [Hegz]
+  -> Alley Art - Vista [Player 5]
+
+McIntosh Heights Lookout
+  -> Riverpole-night (Night) [Player 3]
+
+Moose Park
+  ! No Outgoing Links !
+
+Old Main Post Office
+  -> Alley Art - Shoe [Player 5]
+  -> Alley Art - Cityscape [Player 4]
+  -> Alley Art - Spy vs Spy [Player 3]
+  -> Alley Art - Graffiti [Player2]
+  -> Kamloops Museum and Archives [Player 5]
+  -> Alley Art - Zen [Hegz]
+  -> St. Paul's Cathedral [Player 3]
+
+PCP Mural
+  -> Western Canada Theatre [Player 5]
+  -> Knutsford Community Hall [Hegz]
+  -> Valleyview Centennial Park [Player 3]
+  -> PCP Plaque [Player 3]
+  -> Sagebrush Theatre [Player 5]
+
+PCP Plaque
+  -> Western Canada Theatre [Player2]
+
+Ponderosa Inukshuk
+  -> Department of Highways Fountain [Player2]
+  -> Riverpole-night (Night) [Player 4]
+
+Rangers APC
+  -> Kenna Cartwright Park Sign [Player 3]
+  -> McIntosh Heights Lookout [Player 4]
+  -> Wise Guys Car Wash [Player 5]
+  -> Scenic Lookout [Player2]
+  -> Wizard Graffiti [Player2]
+
+Red Bridge Marker
+  -> Moose Park [Player 5]
+  -> Fishbone Riverside [Hegz]
+  -> Heritage Railway Caboose [Player 5]
+  -> Arena Mural [Player 3]
+  -> Western Canada Theatre [Player 5]
+
+Riverpole-day (Day)
+  -> Riverpole-night (Night) [Hegz]
+  -> McIntosh Heights Lookout [Player 3]
+
+Riverpole-night (Night)
+  ! No Outgoing Links !
+
+Sagebrush Theatre
+  -> Department of Highways Fountain [Player 5]
+  -> Ponderosa Inukshuk [Player 5]
+  -> Arena Mural [Player 3]
+  -> Western Canada Theatre [Player 4]
+  -> Albert McGowan Spray Park [Player 4]
+  -> Knutsford Community Hall [Hegz]
+  -> PCP Plaque [Player2]
+
+Scenic Lookout
+  -> McIntosh Heights Lookout [Player2]
+
+School bell
+  -> Riverpole-night (Night) [Hegz]
+  -> McIntosh Heights Lookout [Player 4]
+  -> Rangers APC [Player 3]
+  -> Riverpole-day (Day) [Player 5]
+  -> Shopping Penguins [Player 4]
+
+Shopping Penguins
+  -> Kenna Cartwright Park Sign [Player2]
+  -> Rangers APC [Hegz]
+
+St. Paul's Cathedral
+  -> Department of Highways Fountain [Hegz]
+  -> Wildfire Memorial [Player 5]
+  -> Ponderosa Inukshuk [Hegz]
+  -> Alley Art - Spy vs Spy [Player 4]
+  -> Wall of Honor Fountain [Player 3]
+  -> Kamloops Museum and Archives [Player 4]
+  -> Alley Art - Vista [Player 4]
+
+The Schuberts
+  -> Moose Park [Hegz]
+  -> Wise Guys Car Wash [Hegz]
+  -> Red Bridge Marker [Player 3]
+  -> Valleyview Centennial Park [Player 5]
+  -> Totem Poles [Hegz]
+
+Totem Poles
+  -> Moose Park [Player 4]
+  -> Wise Guys Car Wash [Player 3]
+  -> Wizard Graffiti [Player 4]
+
+T’kemlups Secwepemc ~ Kamloops (Face)
+  -> Riverpole-night (Night) [Player 5]
+  -> McIntosh Heights Lookout [Hegz]
+  -> Scenic Lookout [Player 4]
+  -> Wizard Graffiti [Player2]
+  -> Kamloops sculpture (Rock) [Player 3]
+  -> Kamloops City Hall [Player 3]
+
+Uji Feature Garden Archway
+  -> Kamloops Monuments (Water Levels) [Player 3]
+  -> Uji Way Friendship Garden [Player 5]
+  -> Kamloops sculpture Overlanders [Player 4]
+  -> Kamloops boat sculpture [Player 3]
+
+Uji Way Friendship Garden
+  -> Moose Park [Hegz]
+  -> Kamloops Monuments (Water Levels) [Player 3]
+
+Valleyview Centennial Park
+  -> Wise Guys Car Wash [Player 5]
+  -> Western Canada Theatre [Hegz]
+  -> Red Bridge Marker [Player 3]
+  -> Knutsford Community Hall [Player2]
+
+Wall of Honor Fountain
+  -> Department of Highways Fountain [Player 4]
+  -> Wildfire Memorial [Player 4]
+
+Western Canada Theatre
+  -> Arena Mural [Player 5]
+
+Wildfire Memorial
+  ! No Outgoing Links !
+
+Wise Guys Car Wash
+  -> Kenna Cartwright Park Sign [Hegz]
+
+Wizard Graffiti
+  -> Moose Park [Hegz]
+  -> Wise Guys Car Wash [Player 4]
+  -> Scenic Lookout [Player 4]
+  -> Uji Way Friendship Garden [Player2]
+
+Keys Consumed
+Player2 keys
+2 	 Albert McGowan Spray Park
+1 	 Alley Art - Graffiti
+1 	 Alley Art - Shoe
+1 	 Department of Highways Fountain
+2 	 Fishbone Riverside
+1 	 Heritage Railway Caboose
+2 	 Kamloops Sculpture (Roundabout - Lorne St)
+2 	 Kamloops sculpture (Rock)
+1 	 Kamloops sculpture Overlanders
+1 	 Kenna Cartwright Park Sign
+1 	 Knutsford Community Hall
+1 	 McIntosh Heights Lookout
+2 	 Moose Park
+1 	 PCP Plaque
+1 	 Ponderosa Inukshuk
+2 	 Riverpole-night (Night)
+1 	 Scenic Lookout
+1 	 Shopping Penguins
+1 	 Uji Way Friendship Garden
+1 	 Western Canada Theatre
+2 	 Wildfire Memorial
+2 	 Wizard Graffiti
+
+Player 3 keys
+1 	 Alley Art - Archway
+1 	 Alley Art - Shoe
+1 	 Alley Art - Spy vs Spy
+2 	 Arena Mural
+1 	 Builders Forest
+1 	 Department of Highways Fountain
+1 	 Fishbone Riverside
+1 	 Kamloops City Hall
+3 	 Kamloops Monuments (Water Levels)
+3 	 Kamloops Sculpture (Roundabout - Lorne St)
+2 	 Kamloops boat sculpture
+1 	 Kamloops sculpture (Rock)
+1 	 Kenna Cartwright Park Sign
+1 	 McIntosh Heights Lookout
+1 	 PCP Plaque
+1 	 Ponderosa Inukshuk
+1 	 Rangers APC
+2 	 Red Bridge Marker
+1 	 Riverpole-night (Night)
+1 	 St. Paul's Cathedral
+1 	 Valleyview Centennial Park
+1 	 Wall of Honor Fountain
+1 	 Wise Guys Car Wash
+
+Player 4 keys
+1 	 Albert McGowan Spray Park
+1 	 Alley Art - Archway
+1 	 Alley Art - Cityscape
+1 	 Alley Art - Graffiti
+1 	 Alley Art - Spy vs Spy
+1 	 Alley Art - Vista
+1 	 Department of Highways Fountain
+1 	 Kamloops Museum and Archives
+2 	 Kamloops Sculpture (Roundabout - Lorne St)
+1 	 Kamloops boat sculpture
+1 	 Kamloops sculpture (Rock)
+1 	 Kamloops sculpture Overlanders
+1 	 Kenna Cartwright Park Sign
+2 	 McIntosh Heights Lookout
+1 	 Moose Park
+1 	 Ponderosa Inukshuk
+2 	 Riverpole-night (Night)
+2 	 Scenic Lookout
+1 	 Shopping Penguins
+1 	 Uji Way Friendship Garden
+1 	 Wall of Honor Fountain
+1 	 Western Canada Theatre
+1 	 Wildfire Memorial
+1 	 Wise Guys Car Wash
+1 	 Wizard Graffiti
+
+Hegz keys
+1 	 Alley Art - Archway
+1 	 Alley Art - Cityscape
+1 	 Alley Art - Spy vs Spy
+1 	 Alley Art - Vista
+1 	 Alley Art - Zen
+1 	 Builders Forest
+1 	 Department of Highways Fountain
+1 	 Fishbone Riverside
+1 	 Kamloops Monuments (Water Levels)
+1 	 Kamloops Museum and Archives
+1 	 Kamloops sculpture Overlanders
+1 	 Kenna Cartwright Park Sign
+2 	 Knutsford Community Hall
+1 	 McIntosh Heights Lookout
+3 	 Moose Park
+1 	 Ponderosa Inukshuk
+1 	 Rangers APC
+2 	 Riverpole-night (Night)
+1 	 School bell
+1 	 Totem Poles
+1 	 Uji Way Friendship Garden
+1 	 Western Canada Theatre
+1 	 Wildfire Memorial
+1 	 Wise Guys Car Wash
+2 	 Wizard Graffiti
+
+Player 5 keys
+1 	 Alley Art - Archway
+1 	 Alley Art - Shoe
+1 	 Alley Art - Spy vs Spy
+1 	 Alley Art - Vista
+1 	 Arena Mural
+1 	 Department of Highways Fountain
+1 	 Fishbone Riverside
+1 	 Heritage Railway Caboose
+1 	 Kamloops City Hall
+1 	 Kamloops Museum and Archives
+2 	 Kamloops Sculpture (Roundabout - Lorne St)
+1 	 Kamloops sculpture Overlanders
+1 	 Knutsford Community Hall
+2 	 Moose Park
+1 	 Ponderosa Inukshuk
+1 	 Riverpole-day (Day)
+2 	 Riverpole-night (Night)
+1 	 Sagebrush Theatre
+1 	 Uji Way Friendship Garden
+1 	 Valleyview Centennial Park
+2 	 Western Canada Theatre
+2 	 Wildfire Memorial
+2 	 Wise Guys Car Wash
+
