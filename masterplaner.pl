@@ -337,11 +337,21 @@ for my $portal (keys %portals) {
 }
 
 # Calculate Image size and scaling.
-	my $scaley = $imagesize / ($eastmost - $westmost) * 1.2;
-	my $scalex = $imagesize / ($southmost - $northmost) * -1;
-	$imgheight = $scaley * ($southmost - $northmost) *-1;
-	$imgwidth = $scalex * ($eastmost - $westmost);
+	my $scaley = $imagesize / ($eastmost - $westmost) * 1;
+	my $scalex = $imagesize / ($southmost - $northmost) * -1 * 0.4;
+	$imgheight = $scaley * ($southmost - $northmost) *-1.02;
+	$imgwidth = $scalex * ($eastmost - $westmost) * 1.02;
+	my $xoffset = $scalex * ($eastmost - $westmost) * 0.01;
+	my $yoffset = $scaley * ($southmost - $northmost) *-0.01;
+
 my $svg= SVG->new(width=>$imgwidth,height=>$imgheight, style=>{background=>'white'});
+
+my $bg = $svg->rectangle(
+	width=>$imgwidth, height=>$imgheight,
+		fill => 'white',
+			id=>'rect_1'
+			);
+
 
 # Insert Directional Marker
 my $m = $svg->marker(
@@ -350,8 +360,8 @@ my $m = $svg->marker(
 	refX => "0", 
 	refY => "10", 
 	markerUnits => "strokeWidth",
-	markerWidth => "8", 
-	markerHeight => "6", 
+	markerWidth => $imagesize / 300, 
+	markerHeight => $imagesize / 300, 
 	orient => "auto",
 	);
 $m->tag(
@@ -373,6 +383,7 @@ my $svg_ports=$svg->group(
     style => { stroke=>'purple', fill=> 'Purple', 'stroke-width'=>'0.05'}
 );
 
+
 # Add in all the lines with a midpoint for the directional Marker
 my $lineid = 1;
 for my $source (sort keys %portals) {
@@ -380,11 +391,11 @@ if (defined (@{$orders{$source}})) {
 	for (@{$orders{$source}}) {
 		next unless defined $_->{'player'};
 
-			my $x1 = ((-1 * $westmost) + $portals{$source}->{x_cord}) * $scalex;
-			my $y1 = ($northmost - $portals{$source}->{y_cord}) * $scaley;
+			my $x1 = ((-1 * $westmost) + $portals{$source}->{x_cord}) * $scalex + $xoffset;
+			my $y1 = ($northmost - $portals{$source}->{y_cord}) * $scaley + $yoffset;
 
-			my $x3 = ((-1 * $westmost) + $portals{$_->{'target'}}->{x_cord}) * $scalex;
-			my $y3 = ($northmost - $portals{$_->{'target'}}->{y_cord}) * $scaley;
+			my $x3 = ((-1 * $westmost) + $portals{$_->{'target'}}->{x_cord}) * $scalex +$xoffset;
+			my $y3 = ($northmost - $portals{$_->{'target'}}->{y_cord}) * $scaley +$yoffset;
 
 			my $x2 = $x1 + 0.5 * ($x3 - $x1);
 			my $y2 = $y1 + 0.5 * ($y3 - $y1);
@@ -408,10 +419,10 @@ if (defined (@{$orders{$source}})) {
 
 # Add in all the portals
 for my $portal (sort keys %portals) {
-	my $x = ((-1 * $westmost) + $portals{$portal}->{x_cord}) * $scalex;
-	my $y = ($northmost - $portals{$portal}->{y_cord}) * $scaley;
+	my $x = ((-1 * $westmost) + $portals{$portal}->{x_cord}) * $scalex +$xoffset;
+	my $y = ($northmost - $portals{$portal}->{y_cord}) * $scaley +$yoffset;
 
-	$svg_ports->circle(cx=>$x, cy=>$y, r=>1.5, id=>$portal)
+	$svg_ports->circle(cx=>$x, cy=>$y, r=>1, id=>$portal)
 }
 
 open my $pic, '>', 'mesh.svg';
