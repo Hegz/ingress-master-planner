@@ -10,6 +10,7 @@
 #               -Give preference to a specific player.
 #               -textual output of links
 #               -report of consumed keys
+#               -SVG output of link mesh
 #
 # REQUIREMENTS: Math::Geometry::Delaunay
 #       AUTHOR: Adam Fairbrother (Hegz), adam.fairbrother@gmail.com
@@ -22,14 +23,43 @@ use warnings;
 use Math::Geometry::Delaunay qw(TRI_CCDT);
 use Scalar::Util qw(looks_like_number);
 use SVG;
+use Getopt::Long;
+use Data::Dumper;
+
+my $control_file = 'PortalControlers.csv';
+
+my @outtype = ('a');
+my $filename_prefix = 'best_links';
+my @player_prefs = ( '' );
+GetOptions ( 'outtype'    => @outtype,
+		'prefix'     => $filename_prefix,
+		'playerpref' => @player_prefs,
+		);
 
 # Players in descending order of preference
-my @player_prefs = ( '' );
 
 my @file = <>;
 
-#Player hash format:playerkey,Colour 
 my %players;
+
+
+my $kml = 1;
+
+# Load controllers.
+my %controllers;
+open my $controlfh, '<', $control_file;
+my @control = <$controlfh>;
+close $controlfh;
+shift @control;
+for (@control) {
+	my ($portal, $links, $player) = split(/,/);
+	$portal =~ s/\s*\(.*\)//;
+	unless ( $player eq '' ) {
+		$controllers{$portal} = $player;
+		push \@{$players{$player}->{'portals'}}, $portal;
+	}
+}
+#Player hash format:playerkey,Colour 
 
 # Read names and colours from the datafile and store in the %players hash
 my $players = shift(@file);
@@ -45,7 +75,7 @@ for (my $count = 4; $count >= 1; $count--) {
 	shift @colours;
 }
 for (my $count = scalar(@names) - 1 ; $count >= 0; $count--) {
-	$players{$names[$count]} = $colours[$count];
+	$players{$names[$count]}->{'colour'} = $colours[$count];
 }
 
 #portal hash.  Format $portals{Portal_name}->{nick=>Nickname, x_cord=>x, y_cord=>y, {player}=>{keys}}
@@ -55,9 +85,11 @@ for (@file) {
 	chomp;
 	s/"//g;
 	my ($x,$y,$ignore,$name,$nick,@keys) = split(/,/);
-	$portals{$name} = {nick => $nick, x_cord => $x, y_cord => $y, ignore => $ignore};
-	for (my $count = scalar(@names)-1; $count >= 0; $count--) {
-		$portals{$name}->{$names[$count]} = $keys[$count];
+	unless ($ignore =~ m/yes/i ) { 
+		$portals{$name} = {nick => $nick, x_cord => $x, y_cord => $y, ignore => $ignore};
+		for (my $count = scalar(@names)-1; $count >= 0; $count--) {
+			$portals{$name}->{$names[$count]} = $keys[$count];
+		}
 	}
 }
 
@@ -77,15 +109,14 @@ $tri->triangulate();
 my $links = $tri->edges();
 
 my $stats = "Total Number of Portals: " . scalar @points . "\n" .
-            "Total Number of fields: " . scalar @{$tri->vnodes} . "\n" . 
-            "Total Number of Links: " . scalar @{$tri->edges} . "\n";
+"Total Number of fields: " . scalar @{$tri->vnodes} . "\n" . 
+"Total Number of Links: " . scalar @{$tri->edges} . "\n";
 
 # Number of Links per player
 my %player_links;
 for (@names) {
 	$player_links{$_} = 0;
 }
-
 # List of linking instructions $order{source} -> {target, player}
 my %orders;
 
@@ -100,21 +131,21 @@ for my $player (@player_prefs) {
 		}
 	}
 	for my $key ( sort { $portalkeys{$b} <=> $portalkeys{$a} } keys %portalkeys ){
-		LINK: for my $link ( @{$links} ) {
-			next LINK unless ( defined $link );
-			if ( ${${$link}[0]}[0] == $portals{$key}->{'x_cord'} && ${${$link}[0]}[1] == $portals{$key}->{'y_cord'} && $portalkeys{$key} gt 0) {
-				if (keylink(${$link}[1], $key, \%portalkeys, $player)){
-					$link = undef;
-				next LINK;
-				}
-			}
-			elsif ( ${${$link}[1]}[0] == $portals{$key}->{'x_cord'} && ${${$link}[1]}[1] == $portals{$key}->{'y_cord'} && $portalkeys{$key} gt 0) {
-				if (keylink(${$link}[0], $key, \%portalkeys, $player)){
-					$link = undef;
-				next LINK;
-				}
-			}
-		}
+LINK: for my $link ( @{$links} ) {
+		  next LINK unless ( defined $link );
+		  if ( ${${$link}[0]}[0] == $portals{$key}->{'x_cord'} && ${${$link}[0]}[1] == $portals{$key}->{'y_cord'} && $portalkeys{$key} gt 0) {
+			  if (keylink(${$link}[1], $key, \%portalkeys, $player)){
+				  $link = undef;
+				  next LINK;
+			  }
+		  }
+		  elsif ( ${${$link}[1]}[0] == $portals{$key}->{'x_cord'} && ${${$link}[1]}[1] == $portals{$key}->{'y_cord'} && $portalkeys{$key} gt 0) {
+			  if (keylink(${$link}[0], $key, \%portalkeys, $player)){
+				  $link = undef;
+				  next LINK;
+			  }
+		  }
+	  }
 	}
 }
 my %portalkeys;
@@ -129,21 +160,21 @@ for my $portal (keys %portals){
 	$portalkeys{$portal} = $keys;
 }
 for my $key ( sort { $portalkeys{$b} <=> $portalkeys{$a} } keys %portalkeys ){
-	LINK: for my $link ( @{$links} ) {
-		next LINK unless ( defined $link );
-		if ( ${${$link}[0]}[0] == $portals{$key}->{'x_cord'} && ${${$link}[0]}[1] == $portals{$key}->{'y_cord'} && $portalkeys{$key} gt 0) {
-			if (keylink(${$link}[1], $key, \%portalkeys)){
-				$link = undef;
-				next LINK;
-			}
-		}
-		elsif ( ${${$link}[1]}[0] == $portals{$key}->{'x_cord'} && ${${$link}[1]}[1] == $portals{$key}->{'y_cord'} && $portalkeys{$key} gt 0) {
-			if (keylink(${$link}[0], $key, \%portalkeys)){
-				$link = undef;
-				next LINK;
-			}
-		}
-	}
+LINK: for my $link ( @{$links} ) {
+		  next LINK unless ( defined $link );
+		  if ( ${${$link}[0]}[0] == $portals{$key}->{'x_cord'} && ${${$link}[0]}[1] == $portals{$key}->{'y_cord'} && $portalkeys{$key} gt 0) {
+			  if (keylink(${$link}[1], $key, \%portalkeys)){
+				  $link = undef;
+				  next LINK;
+			  }
+		  }
+		  elsif ( ${${$link}[1]}[0] == $portals{$key}->{'x_cord'} && ${${$link}[1]}[1] == $portals{$key}->{'y_cord'} && $portalkeys{$key} gt 0) {
+			  if (keylink(${$link}[0], $key, \%portalkeys)){
+				  $link = undef;
+				  next LINK;
+			  }
+		  }
+	  }
 }
 
 
@@ -152,171 +183,227 @@ sub keylink {
 # Add a link from a source portal($key) to the target, along with a player that has the key.
 	my	( $link, $key, $portalkeys, $player )	= @_;
 	unless (defined $player) {
-		# Give this link to the player with the least links, unless we're told what player to use.
-		CHOOSER: for my $p ( sort { $player_links{$a} <=> $player_links{$b} } keys %player_links ) {
-			if (defined $portals{$key}->{$p} &&  $portals{$key}->{$p} gt 0) {
-				$player = $p;
-				last CHOOSER;
-			}
+
+# Give this link to the player with the least links, unless we're told what player to use.
+CHOOSER: for my $p ( sort { $player_links{$a} <=> $player_links{$b} } keys %player_links ) {
+			 if (defined $portals{$key}->{$p} &&  $portals{$key}->{$p} gt 0) {
+				 $player = $p;
+				 last CHOOSER;
+		 }
 		}
 	}
 
-	FINDER: for (keys %portals) {
-		# Find the Target portal, and add it all to the hash
-		if ($portals{$_}->{'x_cord'} == ${$link}[0] && $portals{$_}->{'y_cord'} == ${$link}[1] && $key ne $_) {
-			push @{$orders{$_}}, {target => $key, player => $player};
-			$portalkeys->{$key}--;
-			$player_links{$player} += 1;
-			$portals{$key}->{$player} -= 1;
-			return 1;
+FINDER: for (keys %portals) {
+# Find the Target portal, and add it all to the hash
+			if ($portals{$_}->{'x_cord'} == ${$link}[0] && $portals{$_}->{'y_cord'} == ${$link}[1] && $key ne $_) {
+# Check if the source portal is being controlled by a player, give it to them if possible
+				if (defined $controllers{$_} && defined $portals{$_}->{$controllers{$_}} &&  $portals{$key}->{$controllers{$_}} gt 0) {
+					$player = $controllers{$_};
+				}
+				push @{$orders{$_}}, {target => $key, player => $player};
+				$portalkeys->{$key}--;
+				$player_links{$player} += 1;
+				$portals{$key}->{$player} -= 1;
+				return 1;
+			}
 		}
-	}
-	return 0;
+		return 0;
 } ## --- end sub keylink
 
-
+my %missing_keys;
 my $missed_links;
 #Load on any remainders
-LINK: for my $link ( @{$links} ) {
-	next unless ( defined $link );
-	$missed_links++;
-	for my $key (keys %portals) {
-		if (${${$link}[0]}[0] == $portals{$key}->{'x_cord'} && ${${$link}[0]}[1] == $portals{$key}->{'y_cord'}) {
-			for (keys %portals) {
-				if ($portals{$_}->{'x_cord'} == ${${$link}[1]}[0] && $portals{$_}->{'y_cord'} == ${${$link}[1]}[1]) {
-					push @{$orders{$_}}, {target => $key};
-					$link = undef;
-					next LINK;
-				}
-			}
-		}
-	}
-}
 
+LINK: for my $link ( @{$links} ) {
+		  next unless ( defined $link );
+		  $missed_links++;
+		  for my $key (keys %portals) {
+			  if (${${$link}[0]}[0] == $portals{$key}->{'x_cord'} && ${${$link}[0]}[1] == $portals{$key}->{'y_cord'}) {
+				  for (keys %portals) {
+					  if ($portals{$_}->{'x_cord'} == ${${$link}[1]}[0] && $portals{$_}->{'y_cord'} == ${${$link}[1]}[1]) {
+						  $missing_keys{$key}++;
+						#  $missing_keys{$_}++;
+						  push @{$orders{$_}}, {target => $key};
+						  $link = undef;
+						  next LINK;
+					  }
+				  }
+			  }
+		  }
+	  }
+
+#missing keys output
+open my $file, '>', 'Missing_keys.txt';
+for (sort keys %missing_keys) {
+	print $file "$_ " . "\n";
+}
+close $file;
 
 #Print output
+
+if ($kml) {
 # Begin Document
-print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-print "<kml xmlns=\"http://earth.google.com/kml/2.2\">\n";
-print "<Document>\n";
-print "  <name>Kamloops Portals - Max Links</name>\n";
-print "  <description><![CDATA[Autogenerated Max links.\n";
-print "";
-print "$stats";
-print "currently $missed_links links short of a full wipe\n\n" if defined ($missed_links);
-for (keys %player_links) {
-	print "$_ $player_links{$_}\n";
-}
-print "]]></description>\n";
+	print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+	print "<kml xmlns=\"http://earth.google.com/kml/2.2\">\n";
+	print "<Document>\n";
+	print "  <name>Kamloops Portals - Max Links</name>\n";
+	print "  <description><![CDATA[Autogenerated Max links.\n";
+	print "";
+	print "$stats";
+	print "currently $missed_links links short of a full wipe\n\n" if defined ($missed_links);
+	for (keys %player_links) {
+		print "$_ $player_links{$_}\n";
+	}
+	print "]]></description>\n";
 
 # Set default link colour for no Keys
-print "  <Style id=\"linknokey\">\n";
-print "    <LineStyle>\n";
-print "      <color>FF000000</color>\n";
-print "      <width>2</width>\n";
-print "    </LineStyle>\n";
-print "  </Style>\n";
-
-# Set link colours for players with matching keys
-for (@names){
-	print "  <Style id=\"link$_\">\n";
+	print "  <Style id=\"linknokey\">\n";
 	print "    <LineStyle>\n";
-	print "      <color>FF" .  scalar reverse($players{$_}) . "</color>\n";
-	print "      <width>5</width>\n";
+	print "      <color>FF000000</color>\n";
+	print "      <width>2</width>\n";
 	print "    </LineStyle>\n";
 	print "  </Style>\n";
-}
+
+# Set default link colour for links with Keys but no controller
+	print "  <Style id=\"linknocontroller\">\n";
+	print "    <LineStyle>\n";
+	print "      <color>FFFF00FF</color>\n";
+	print "      <width>2</width>\n";
+	print "    </LineStyle>\n";
+	print "  </Style>\n";
+
+# Set link colours for players with matching keys
+	for (@names){
+		print "  <Style id=\"link$_\">\n";
+		print "    <LineStyle>\n";
+		print "      <color>FF" .  scalar reverse($players{$_}->{'colour'}) . "</color>\n";
+		print "      <width>5</width>\n";
+		print "    </LineStyle>\n";
+		print "  </Style>\n";
+	}
 
 #Set Default Portal Style
-print "   <Style id=\"Portal\">\n";
-print "     <LabelStyle>\n";
-print "       <color>FFAA0000</color>\n";
-print "     </LabelStyle>\n";
-print "   </Style>\n";
+	print "   <Style id=\"Portal\">\n";
+	print "     <LabelStyle>\n";
+	print "       <color>FFAA0000</color>\n";
+	print "     </LabelStyle>\n";
+	print "   </Style>\n";
 
 # Load all portal markers.
-for (sort keys %portals) {
-	print "   <Placemark>\n";
-	print "     <name>$_</name>\n";
-	print "     <styleUrl>#Portal</styleUrl>\n";
-	print "     <Point>\n";
-	print "       <coordinates>" . $portals{$_}->{'x_cord'} . "," . $portals{$_}->{'y_cord'} .",0</coordinates>\n";
-	print "     </Point>\n";
-	print "   </Placemark>\n";
-}
+	for (sort keys %portals) {
+		print "   <Placemark>\n";
+		print "     <name>$_</name>\n";
+		print "     <styleUrl>#Portal</styleUrl>\n";
+		print "     <Point>\n";
+		print "       <coordinates>" . $portals{$_}->{'x_cord'} . "," . $portals{$_}->{'y_cord'} .",0</coordinates>\n";
+		print "     </Point>\n";
+		print "   </Placemark>\n";
+	}
 
-for my $source (sort keys %orders){
-	for (@{$orders{$source}}) {
-	print "  <Placemark>\n";
-	print "    <Snippet></Snippet>\n";
-	print "    <description><![CDATA[]]></description>\n";
+	for my $source (sort keys %orders){
+		for (@{$orders{$source}}) {
+			print "  <Placemark>\n";
+			print "    <Snippet></Snippet>\n";
+			print "    <description><![CDATA[]]></description>\n";
 
-	if (defined $_->{'player'}){
-		print "    <styleUrl>#link" . $_->{'player'} . "</styleUrl>\n";
-		print "    <name>" . $_->{'player'} . " key link to " . $_->{'target'} . "</name>\n";
+			if (defined $_->{'player'} && defined $controllers{$source}){
+				print "    <styleUrl>#link" . $controllers{$source} . "</styleUrl>\n";
+				print "    <name>" . $_->{'player'} . " key link to " . $_->{'target'} . "</name>\n";
+			}
+			elsif (defined $_->{'player'}) {
+				print "    <styleUrl>#linknocontroller</styleUrl>\n";
+				print "    <name>" . $_->{'player'} . " key link to " . $_->{'target'} . "</name>\n";
+			}
+			else {
+				print "    <styleUrl>#linknokey</styleUrl>\n";
+				print "    <name>Link</name>\n";
+			}
+			print "    <LineString>\n";
+			print "      <tessellate>1</tessellate>\n";
+			print "      <coordinates>\n";
+			print "        " . $portals{$source}->{x_cord} . "," . $portals{$source}->{y_cord} . ",0\n";
+			print "        " . $portals{$_->{target}}->{x_cord} . "," . $portals{$_->{target}}->{y_cord} . ",0\n";
+			print "      </coordinates>\n";
+			print "    </LineString>\n";
+		 	print "  </Placemark>\n";
+		} 
 	}
-	else {
-		print "    <styleUrl>#linknokey</styleUrl>\n";
-		print "    <name>Link</name>\n";
-	}
-	print "    <LineString>\n";
-	print "      <tessellate>1</tessellate>\n";
-	print "      <coordinates>\n";
-	print "        " . $portals{$source}->{x_cord} . "," . $portals{$source}->{y_cord} . ",0\n";
-	print "        " . $portals{$_->{target}}->{x_cord} . "," . $portals{$_->{target}}->{y_cord} . ",0\n";
-	print "      </coordinates>\n";
-	print "    </LineString>\n";
-	print "  </Placemark>\n";
-	}
-}
 
 # Close Document
-print "</Document>\n";
-print "</kml>\n";
-
+	print "</Document>\n";
+	print "</kml>\n";
+}
 
 #Textual Description output
 open my $marching_orders, '>', 'orders.txt';
-for (sort keys %portals) {
-	print $marching_orders "$_";
-	print $marching_orders " (" . $portals{$_}->{nick} . ")" if $portals{$_}->{nick} ne "";
-	print $marching_orders "\n";
-if (defined (@{$orders{$_}})) {
-	for (@{$orders{$_}}) {
-		next unless defined $_->{'player'};
-		print $marching_orders "  -> " . $_->{'target'} ;
-		print $marching_orders " (" . $portals{$_->{target}}->{nick} . ")" if $portals{$_->{target}}->{nick} ne "";
-		print $marching_orders " [" . $_->{'player'} . "]";
-		print $marching_orders "\n";
+for my $player (sort keys %players) {
+	print $marching_orders "Attack Plan for $player\n";
+	print $marching_orders "==================================\n\n";
+	my $total_links = 0;
+	if (defined (@{$players{$player}->{'portals'}})) {
+		for (sort @{$players{$player}->{'portals'}}) {
+			chomp;
+			print $marching_orders "$_";
+			print $marching_orders " (" . $portals{$_}->{nick} . ")" if defined $portals{$_}->{nick} && $portals{$_}->{nick} ne "";
+			print $marching_orders "\n";
+			if (defined (@{$orders{$_}})) {
+				for (@{$orders{$_}}) {
+					next unless defined $_->{'player'};
+					print $marching_orders "  -> " . $_->{'target'} ;
+					print $marching_orders " (" . $portals{$_->{target}}->{nick} . ")" if $portals{$_->{target}}->{nick} ne "";
+					print $marching_orders "\n";
+					$total_links++
+				}
+			}
+			else {
+				print $marching_orders "  ! No Outgoing Links !\n";
+			}
+			print $marching_orders "\n";
+		}
 	}
-
-	}
-else {
-	print $marching_orders "  ! No Outgoing Links !\n";
-}
-
-	print $marching_orders "\n";
-	}
-
-	print $marching_orders "Keys Consumed\n";
-	for my $player (keys %players) {
-		my %keys;
-		for ( keys %orders ) {
-			for (@{$orders{$_}}){
-				if (defined $_->{'player'} && $_->{'player'} eq $player) {
-					$keys{$_->{target}}++;
+	print $marching_orders $total_links . " Total Links\n";
+	print $marching_orders "Your Key Transfers\n\n";
+	for my $reciptient (sort keys %players) {
+		next if $reciptient eq $player;
+		print $marching_orders "Keys to transfer to $reciptient\n";
+		my %transfers;
+		for my $portal (sort keys %portals) {
+			if (defined $orders{$portal}){
+				for (@{$orders{$portal}}) {
+					next unless defined $_->{'player'};
+					next unless defined $controllers{$portal} && $controllers{$portal} eq $reciptient;
+					if ($player eq $_->{'player'}) {
+						$transfers{$_->{'target'}} +=1; 
+					}
 				}
 			}
 		}
-		print $marching_orders "$player keys\n";
-		for (sort keys %keys) {
-			print $marching_orders "$keys{$_} \t $_";
-			print $marching_orders " (" . $portals{$_}->{nick} . ")" if $portals{$_}->{nick} ne "";
-			print $marching_orders "\n";
+		for (sort keys %transfers) {
+			print $marching_orders $transfers{$_} . " X " . $_ . "\n";
 		}
 		print $marching_orders "\n";
 
+	}
+
+	for (@{$players{$player}->{'portals'}}) {
+		print $marching_orders $portals{$_}->{'y_cord'} . "," . $portals{$_}->{'x_cord'} . "\n";
+	}
 }
+
+open my $portal_links, '>', 'portal_links.txt';
+for (sort keys %portals) {
+	print $portal_links "$_";
+	print $portal_links " (" . $portals{$_}->{nick} . ")" if $portals{$_}->{nick} ne "";
+	print $portal_links ",";
+	if (defined (@{$orders{$_}})) {
+		print $portal_links scalar @{$orders{$_}} . "\n";
+	}
+	else {
+		print $portal_links "0 \n";
+	}
+}
+
+exit 0;
 
 #SVG Output
 
@@ -337,59 +424,59 @@ for my $portal (keys %portals) {
 }
 
 # Calculate Image size and scaling.
-	my $scaley = $imagesize / ($eastmost - $westmost) * 1;
-	my $scalex = $imagesize / ($southmost - $northmost) * -1 * 0.4;
-	$imgheight = $scaley * ($southmost - $northmost) *-1.02;
-	$imgwidth = $scalex * ($eastmost - $westmost) * 1.02;
-	my $xoffset = $scalex * ($eastmost - $westmost) * 0.01;
-	my $yoffset = $scaley * ($southmost - $northmost) *-0.01;
+my $scaley = $imagesize / ($eastmost - $westmost) * 1;
+my $scalex = $imagesize / ($southmost - $northmost) * -1 * 0.4;
+$imgheight = $scaley * ($southmost - $northmost) *-1.02;
+$imgwidth = $scalex * ($eastmost - $westmost) * 1.02;
+my $xoffset = $scalex * ($eastmost - $westmost) * 0.01;
+my $yoffset = $scaley * ($southmost - $northmost) *-0.01;
 
 my $svg= SVG->new(width=>$imgwidth,height=>$imgheight, style=>{background=>'white'});
 
 my $bg = $svg->rectangle(
-	width=>$imgwidth, height=>$imgheight,
+		width=>$imgwidth, height=>$imgheight,
 		fill => 'white',
-			id=>'rect_1'
-			);
+		id=>'rect_1'
+		);
 
 
 # Insert Directional Marker
 my $m = $svg->marker(
-	id => 'Tri',
-	viewBox => "0 0 20 20", 
-	refX => "0", 
-	refY => "10", 
-	markerUnits => "strokeWidth",
-	markerWidth => $imagesize / 300, 
-	markerHeight => $imagesize / 300, 
-	orient => "auto",
-	);
+		id => 'Tri',
+		viewBox => "0 0 20 20", 
+		refX => "0", 
+		refY => "10", 
+		markerUnits => "strokeWidth",
+		markerWidth => $imagesize / 300, 
+		markerHeight => $imagesize / 300, 
+		orient => "auto",
+		);
 $m->tag(
-	'path',
-	d => "M 0 0 L 20 10 L 0 20 z"
-	);
+		'path',
+		d => "M 0 0 L 20 10 L 0 20 z"
+	   );
 
 # Add a group for each player
 my %groups;
 for my $player (keys %players) {
 	$groups{$player} = $svg->group (
-		id => "group_$player",
-		style => { stroke=> '#'.$players{$player}, 'stroke-width'=>'0.5', 'marker-mid' => 'url(#Tri)'});
+			id => "group_$player",
+			style => { stroke=> '#'.$players{$player}, 'stroke-width'=>'0.5', 'marker-mid' => 'url(#Tri)'});
 }
 
 # Portals Group
 my $svg_ports=$svg->group(
-    id    => 'group_y',
-    style => { stroke=>'purple', fill=> 'Purple', 'stroke-width'=>'0.05'}
-);
+		id    => 'group_y',
+		style => { stroke=>'purple', fill=> 'Purple', 'stroke-width'=>'0.05'}
+		);
 
 
 # Add in all the lines with a midpoint for the directional Marker
 my $lineid = 1;
 for my $source (sort keys %portals) {
-if (defined (@{$orders{$source}})) {
-	for (@{$orders{$source}}) {
-		next unless defined $_->{'player'};
+	if (defined (@{$orders{$source}})) {
+		for (@{$orders{$source}}) {
+			next unless defined $_->{'player'};
 
 			my $x1 = ((-1 * $westmost) + $portals{$source}->{x_cord}) * $scalex + $xoffset;
 			my $y1 = ($northmost - $portals{$source}->{y_cord}) * $scaley + $yoffset;
@@ -404,17 +491,17 @@ if (defined (@{$orders{$source}})) {
 			my $yv = [$y1,$y2,$y3];
 
 			my $points = $svg->get_path(
-			x=>$xv, y=>$yv,
-			-type=>'polyline',
-			-closed=>'true');
-			
+					x=>$xv, y=>$yv,
+					-type=>'polyline',
+					-closed=>'true');
+
 			$groups{$_->{'player'}}->polyline (
-				%$points,
-				id => $lineid,
-			 ); 
-		$lineid ++;
+					%$points,
+					id => $lineid,
+					); 
+			$lineid ++;
+		}
 	}
-}
 }
 
 # Add in all the portals
