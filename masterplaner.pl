@@ -26,74 +26,51 @@ use SVG;
 use Getopt::Long;
 use Data::Dumper;
 
-my $control_file = 'PortalControlers.csv';
+# Flags and defaults
 
-my @outtype = ('a');
-my $filename_prefix = 'best_links';
-my @player_prefs = ( '' );
-GetOptions ( 'outtype'    => @outtype,
-		'prefix'     => $filename_prefix,
-		'playerpref' => @player_prefs,
-		);
+# Maximums
+my $portal_max_links_out = 8;
+my $portal_max_links_in  = 20;
 
-# Players in descending order of preference
+# output Toggles
+my $kml_out            = 1;
+my $svg_out            = 1;
+my $orders_out         = 1;
+my $outbound_links_out = 1;
 
-my @file = <>;
+# output Filenames
+my $kml_out_file            = 'mesh.kml';
+my $svg_out_file            = 'mesh.svg';
+my $orders_out_file         = 'orders.txt';
+my $outbound_links_out_file = 'portal_links.txt';
 
-my %players;
+# SVG Options
+my $svg_line_scale = 1;
+my $svg_x_scale    = 1;
+my $svg_y_scale    = 1;
 
+# Input Sources
+my $source_file = undef;
 
-my $kml = 1;
+# Global Variable Definitions
+my @file;                    # Raw data in
+my %players;                 # Players, Colours and controlled portals, keyed by name
+my %portals;                 # Portals, Cords, Nickname and player key counts, keyed by portal name
+my %orders;                  # Hash of source portals to targets with name of linker, and key owner
+my %controllers;             # Hash to define the portal controllers, keyed by portal
 
-# Load controllers.
-my %controllers;
-open my $controlfh, '<', $control_file;
-my @control = <$controlfh>;
-close $controlfh;
-shift @control;
-for (@control) {
-	my ($portal, $links, $player) = split(/,/);
-	$portal =~ s/\s*\(.*\)//;
-	unless ( $player eq '' ) {
-		$controllers{$portal} = $player;
-		push \@{$players{$player}->{'portals'}}, $portal;
-	}
-}
-#Player hash format:playerkey,Colour 
+# Function Prototypes
+sub process_input;           # Process the raw input file into the various hashes and arrays
+sub compile_orders;          # Use the Delaunay grid and key counts to create the orders.
+sub output_kml;
+sub output_svg;
+sub output_orders;
 
-# Read names and colours from the datafile and store in the %players hash
-my $players = shift(@file);
-my $colours = shift(@file);
-chomp $players;
-chomp $colours;
-$colours =~ s/#//g;
+# Main Program :
 
-my @names = split(/,/,$players);
-my @colours = split(/,/,$colours);
-for (my $count = 4; $count >= 1; $count--) {
-	shift @names;
-	shift @colours;
-}
-for (my $count = scalar(@names) - 1 ; $count >= 0; $count--) {
-	$players{$names[$count]}->{'colour'} = $colours[$count];
-}
+process_input;
 
-#portal hash.  Format $portals{Portal_name}->{nick=>Nickname, x_cord=>x, y_cord=>y, {player}=>{keys}}
-my %portals;
-#Read in Datafile
-for (@file) {
-	chomp;
-	s/"//g;
-	my ($x,$y,$ignore,$name,$nick,@keys) = split(/,/);
-	unless ($ignore =~ m/yes/i ) { 
-		$portals{$name} = {nick => $nick, x_cord => $x, y_cord => $y, ignore => $ignore};
-		for (my $count = scalar(@names)-1; $count >= 0; $count--) {
-			$portals{$name}->{$names[$count]} = $keys[$count];
-		}
-	}
-}
-
-# Points array for Triangifiaction
+# Build points array
 my @points;
 for my $portal (keys %portals) {
 	push @points, [ $portals{$portal}->{x_cord}, $portals{$portal}->{y_cord} ];
@@ -112,42 +89,59 @@ my $stats = "Total Number of Portals: " . scalar @points . "\n" .
 "Total Number of fields: " . scalar @{$tri->vnodes} . "\n" . 
 "Total Number of Links: " . scalar @{$tri->edges} . "\n";
 
+sub process_input {
+# Read in the defined source file, or stdin if undefined.
+	if (defined $source_file) {
+		open my $src_file, '<', $source_file;
+		@file = <$src_file>;
+		close $src_file;
+	}
+	else {
+		my @file = <>;
+	}
+
+# Read names and colours from the datafile and store in the %players hash
+	my $players = shift(@file);
+	my $colours = shift(@file);
+	chomp $players;
+	chomp $colours;
+	$colours =~ s/#//g;
+
+	my @names = split(/,/,$players);
+	my @colours = split(/,/,$colours);
+	for (my $count = 4; $count >= 1; $count--) {
+		shift @names;
+		shift @colours;
+	}
+	for (my $count = scalar(@names) - 1 ; $count >= 0; $count--) {
+		$players{$names[$count]}->{'colour'} = $colours[$count];
+	}
+
+#portal hash.  Format $portals{Portal_name}->{nick=>Nickname, x_cord=>x, y_cord=>y, {player}=>{keys}}
+#Read in Datafile
+	for (@file) {
+		chomp;
+		s/"//g;
+		my ($x,$y,$ignore,$controller,$name,$nick,$total,@keys) = split(/,/);
+		unless ($ignore =~ m/yes/i ) { 
+			$portals{$name} = {nick => $nick, x_cord => $x, y_cord => $y, ignore => $ignore};
+			for (my $count = scalar(@names)-1; $count >= 0; $count--) {
+				$portals{$name}->{$names[$count]} = $keys[$count];
+				unless ( $controller = '' ) {
+					$controllers{$name} = $controller;
+					push \@{$players{$controller}->{'portals'}}, $name;
+				}
+			}
+		}
+	}
+} ## --- end sub process_input
+
 # Number of Links per player
 my %player_links;
-for (@names) {
+for (keys %players) {
 	$player_links{$_} = 0;
 }
-# List of linking instructions $order{source} -> {target, player}
-my %orders;
 
-for my $player (@player_prefs) {
-	my %portalkeys = ();
-	for my $portal (keys %portals) {
-		if (defined $portals{$portal}->{$player}) {
-			$portalkeys{$portal} = $portals{$portal}->{$player};
-		}
-		else {
-			$portalkeys{$portal} = 0;
-		}
-	}
-	for my $key ( sort { $portalkeys{$b} <=> $portalkeys{$a} } keys %portalkeys ){
-LINK: for my $link ( @{$links} ) {
-		  next LINK unless ( defined $link );
-		  if ( ${${$link}[0]}[0] == $portals{$key}->{'x_cord'} && ${${$link}[0]}[1] == $portals{$key}->{'y_cord'} && $portalkeys{$key} gt 0) {
-			  if (keylink(${$link}[1], $key, \%portalkeys, $player)){
-				  $link = undef;
-				  next LINK;
-			  }
-		  }
-		  elsif ( ${${$link}[1]}[0] == $portals{$key}->{'x_cord'} && ${${$link}[1]}[1] == $portals{$key}->{'y_cord'} && $portalkeys{$key} gt 0) {
-			  if (keylink(${$link}[0], $key, \%portalkeys, $player)){
-				  $link = undef;
-				  next LINK;
-			  }
-		  }
-	  }
-	}
-}
 my %portalkeys;
 
 for my $portal (keys %portals){
@@ -176,8 +170,6 @@ LINK: for my $link ( @{$links} ) {
 		  }
 	  }
 }
-
-
 
 sub keylink {
 # Add a link from a source portal($key) to the target, along with a player that has the key.
@@ -241,7 +233,7 @@ close $file;
 
 #Print output
 
-if ($kml) {
+if ($kml_out) {
 # Begin Document
 	print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 	print "<kml xmlns=\"http://earth.google.com/kml/2.2\">\n";
@@ -273,7 +265,7 @@ if ($kml) {
 	print "  </Style>\n";
 
 # Set link colours for players with matching keys
-	for (@names){
+	for (keys %players){
 		print "  <Style id=\"link$_\">\n";
 		print "    <LineStyle>\n";
 		print "      <color>FF" .  scalar reverse($players{$_}->{'colour'}) . "</color>\n";
@@ -425,7 +417,7 @@ for my $portal (keys %portals) {
 
 # Calculate Image size and scaling.
 my $scaley = $imagesize / ($eastmost - $westmost) * 1;
-my $scalex = $imagesize / ($southmost - $northmost) * -1 * 0.4;
+my $scalex = $imagesize / ($southmost - $northmost) * -1;
 $imgheight = $scaley * ($southmost - $northmost) *-1.02;
 $imgwidth = $scalex * ($eastmost - $westmost) * 1.02;
 my $xoffset = $scalex * ($eastmost - $westmost) * 0.01;
@@ -475,8 +467,8 @@ my $svg_ports=$svg->group(
 my $lineid = 1;
 for my $source (sort keys %portals) {
 	if (defined (@{$orders{$source}})) {
-		for (@{$orders{$source}}) {
-			next unless defined $_->{'player'};
+ 		for (@{$orders{$source}}) {
+ 			next unless defined $_->{'player'};
 
 			my $x1 = ((-1 * $westmost) + $portals{$source}->{x_cord}) * $scalex + $xoffset;
 			my $y1 = ($northmost - $portals{$source}->{y_cord}) * $scaley + $yoffset;
