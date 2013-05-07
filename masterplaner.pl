@@ -37,13 +37,14 @@ my $kml_out            = 1;
 my $svg_out            = 1;
 my $orders_out         = 1;
 my $outbound_links_out = 1;
+my $missing_keys_out   = 1;
 
 # output Filenames
 my $kml_out_file            = 'mesh.kml';
 my $svg_out_file            = 'mesh.svg';
 my $orders_out_file         = 'orders.txt';
 my $outbound_links_out_file = 'portal_links.txt';
-
+my $missing_keys_out_file   = 'missing_links.txt';
 # SVG Options
 my $svg_line_scale = 1;
 my $svg_x_scale    = 1;
@@ -224,13 +225,15 @@ LINK: for my $link ( @{$links} ) {
 		  }
 	  }
 
-#missing keys output
-open my $file, '>', 'Missing_keys.txt';
-for (sort keys %missing_keys) {
-	print $file "$_ " . "\n";
-}
-close $file;
 
+if ($missing_keys_out ) {
+	#missing keys output
+	open my $file, '>', $missing_keys_out_file;
+		for (sort keys %missing_keys) {
+			print $file "$_ " . "\n";
+		}
+	close $file;
+}
 #Print output
 
 if ($kml_out) {
