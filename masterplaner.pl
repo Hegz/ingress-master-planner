@@ -22,7 +22,7 @@ use strict;
 use warnings;
 use Math::Geometry::Delaunay qw(TRI_CCDT);
 use Scalar::Util qw(looks_like_number);
-use Geo::KML;
+# use Geo::KML;
 use SVG;
 use Getopt::Long;
 Getopt::Long::Configure ("bundling");
@@ -36,16 +36,13 @@ my $portal_max_links_out = 8;
 my $portal_max_links_in  = 20;
 
 # output Toggles
-<<<<<<< HEAD
 my $kml_out            = 'mesh.kml';
 my $svg_out            = 'mesh.svg';
 my $orders_out         = 'plans.txt';
 my $outbound_links_out = 'portal_links.txt';
 my $missing_keys_out   = 'missing_links.txt';
 
-# output Filenames
-=======
->>>>>>> refs/remotes/origin/master
+
 # SVG Options
 my $svg_line_scale = 1;
 my $svg_x_scale    = 1;
@@ -121,19 +118,19 @@ process_links;
 
 # Outputs:
 if ($missing_keys_out) {
-	out_missing_keys($missing_keys_out_file);
+	out_missing_keys($missing_keys_out);
 }
 if ($kml_out) {
-	out_kml($kml_out_file);
+	out_kml($kml_out);
 }
 if ($orders_out) {
-	out_orders($orders_out_file);
+	out_orders($orders_out);
 }
 if ($outbound_links_out) {
-	out_links($outbound_links_out_file);
+	out_links($outbound_links_out);
 }
 if ($svg_out) {
-	out_svg($svg_out_file);
+	out_svg($svg_out);
 }
 
 exit 0;
@@ -668,8 +665,7 @@ sub out_svg {
 
 		$svg_ports->circle( cx => $x, cy => $y, r => 1, id => $portal );
 	}
-
-<<<<<<< HEAD
+}
 exit 0;
 
 __END__
@@ -734,10 +730,3 @@ to maximize available links
 
 
 =cut
-=======
-	print $file $svg->xmlify;
-	if ($filename) {
-	}
-	return;
-}    ## --- end sub out_svg
->>>>>>> refs/remotes/origin/master
