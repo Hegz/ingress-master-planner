@@ -72,20 +72,20 @@ sub out_links;
 
 
 my ($help, $man);            # Help options
-GetOptions ( 'kml:s'           => $kml_out,
-             'svg:s'           => $svg_out,
-			 'plans:s'         => $orders_out,
-			 'links:s'         => $outbound_links_out,
-			 'missingkeys:s'   => $missing_keys_out,
-			 'svg-linescale:i' => $svg_line_scale,
-			 'svg-xscale:i'    => $svg_x_scale,
-			 'svg-yscale:i'    => $svg_y_scale,
-			 'input:s'         => $source_file,
-			 'help|?'          => \&$help,
-			 'man'             => \&$man,
-			 ) or pod2usage(2);
-pod2usage(1) if $help;
-pod2usage(-exitstatus => 0, -verbose =>2) if $man;
+GetOptions ( 'kml:s'           => \$kml_out,
+              'svg:s'           => \$svg_out,
+			 'plans:s'         => \$orders_out,
+			 'links:s'         => \$outbound_links_out,
+			 'missingkeys:s'   => \$missing_keys_out,
+			 'svg-linescale:i' => \$svg_line_scale,
+			 'svg-xscale:i'    => \$svg_x_scale,
+			 'svg-yscale:i'    => \$svg_y_scale,
+			 'input:s'         => \$source_file,
+			 'help|?'          => \$help,
+			 'man'             => \$man,
+ 			 ) or pod2usage(2);
+pod2usage(2) if $help;
+pod2usage(1) if $man;
 
 # Main Program :
 
@@ -701,9 +701,11 @@ masterplanner.pl [options]
 
 One output option must be chosen.
 
+=over 8
+
 =item B<-kml>
 
-Activates the KML and sets the filename to save it in.  If No filename is provided STDOUT is used instead.  
+Activates the KML and sets the filename to save it in.  If No filename is provided STDOUT is used instead.
 KML files can be uploaded to Google maps to visually show the link structure, verify the plan and share it with the team.
 
 =item B<-svg>
@@ -728,5 +730,6 @@ Activates the missing links report and sets the filename to save it in.  If No f
 This report shows the portals and the number of links that are unfilled.  It's a useful list to help obtain the necessary keys
 to maximize available links
 
+=back
 
 =cut
