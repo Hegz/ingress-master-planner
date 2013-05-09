@@ -24,6 +24,8 @@ use Math::Geometry::Delaunay qw(TRI_CCDT);
 use Scalar::Util qw(looks_like_number);
 use SVG;
 use Getopt::Long;
+Getopt::Long::Configure ("bundling");
+use Pod::Usage;
 use Data::Dumper;
 
 # Flags and defaults
@@ -33,18 +35,13 @@ my $portal_max_links_out = 8;
 my $portal_max_links_in  = 20;
 
 # output Toggles
-my $kml_out            = 1;
-my $svg_out            = 1;
-my $orders_out         = 1;
-my $outbound_links_out = 1;
-my $missing_keys_out   = 1;
+my $kml_out            = 'mesh.kml';
+my $svg_out            = 'mesh.svg';
+my $orders_out         = 'plans.txt';
+my $outbound_links_out = 'portal_links.txt';
+my $missing_keys_out   = 'missing_links.txt';
 
 # output Filenames
-my $kml_out_file            = 'mesh.kml';
-my $svg_out_file            = 'mesh.svg';
-my $orders_out_file         = 'orders.txt';
-my $outbound_links_out_file = 'portal_links.txt';
-my $missing_keys_out_file   = 'missing_links.txt';
 # SVG Options
 my $svg_line_scale = 1;
 my $svg_x_scale    = 1;
@@ -66,6 +63,23 @@ sub compile_orders;          # Use the Delaunay grid and key counts to create th
 sub output_kml;
 sub output_svg;
 sub output_orders;
+
+
+my ($help, $man);            # Help options
+GetOptions ( 'kml:s'           => $kml_out,
+             'svg:s'           => $svg_out,
+			 'plans:s'         => $orders_out,
+			 'links:s'         => $outbound_links_out,
+			 'missingkeys:s'   => $missing_keys_out,
+			 'svg-linescale:i' => $svg_line_scale,
+			 'svg-xscale:i'    => $svg_x_scale,
+			 'svg-yscale:i'    => $svg_y_scale,
+			 'input:s'         => $source_file,
+			 'help|?'          => \&$help,
+			 'man'             => \&$man,
+			 ) or pod2usage(2);
+pod2usage(1) if $help;
+pod2usage(-exitstatus => 0, -verbose =>2) if $man;
 
 # Main Program :
 
@@ -512,3 +526,66 @@ print $pic $svg->xmlify;
 close $pic;
 
 exit 0;
+
+__END__
+
+=head1 NAME
+
+masterplanner.pl - simplified optimal AP Collecting
+
+=head1 SYNOPSIS
+
+masterplanner.pl [options]
+
+ Options:
+   
+   -help             Brief help message
+   -man              Full Documentation
+ 
+   Output Options:
+   -kml              Filename for KML output
+   -svg              Filename for SVG output
+   -plan             Filename for the Attack Plans report
+   -links            Filename for portals and outgoing links report
+   -missinglinks     Filename for portals with missing links report
+ 
+  svg options:
+   -svg-linescale    Scale factor for link lines
+   -svg-xscale       Scale factor for Width
+   -svg-yscale       scale factor for height
+
+=head1 OPTIONS
+
+=head2 OUTPUT OPTIONS
+
+One output option must be chosen.
+
+=item B<-kml>
+
+Activates the KML and sets the filename to save it in.  If No filename is provided STDOUT is used instead.  
+KML files can be uploaded to Google maps to visually show the link structure, verify the plan and share it with the team.
+
+=item B<-svg>
+
+Activates the svg output and sets the filename to save it in.  If No filename is provided STDOUT is used instead.
+SVG files show link directionality, but do not show the map, or portal names.
+
+=item B<-plan>
+
+Activates the attack plan report and sets the filename to save it in.  If No filename is provided STDOUT is used instead.
+Plans are the textual easy to follow data output.  It will be individualized per team member and show the source portal,
+outgoing links, and all keys the need to be given away, and to whom.
+
+=item B<-links>
+
+Activates the portal links report and sets the filename to save it in.  If No filename is provided STDOUT is used instead.
+This shows Each portal and the number of outgoing links from each portal.  Useful for deciding on controllers.
+
+=item B<-missinglinks>
+
+Activates the missing links report and sets the filename to save it in.  If No filename is provided STDOUT is used instead.
+This report shows the portals and the number of links that are unfilled.  It's a useful list to help obtain the necessary keys
+to maximize available links
+
+
+=cut
