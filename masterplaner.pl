@@ -98,7 +98,7 @@ for my $portal ( keys %portals ) {
 }
 
 #Triangleificate
-my $tri = new->Math::Geometry::Delaunay();
+my $tri = new Math::Geometry::Delaunay();
 $tri->addPoints( \@points );
 $tri->doEdges(1);
 $tri->doVoronoi(1);
@@ -177,7 +177,7 @@ sub process_input {
 			  { nick => $nick, x_cord => $x, y_cord => $y, ignore => $ignore };
 			for ( my $count = scalar(@names) - 1 ; $count >= 0 ; $count-- ) {
 				$portals{$name}->{ $names[$count] } = $keys[$count];
-				unless ( $controller = '' ) {
+				unless ( $controller eq '' ) {
 					$controllers{$name} = $controller;
 					push \@{ $players{$controller}->{'portals'} }, $name;
 				}
@@ -289,6 +289,7 @@ sub keylink {
 # Check if the source portal is being controlled by a player, give it to them if possible
 			if (    defined $controllers{$_}
 				 && defined $portals{$_}->{ $controllers{$_} }
+				 && $controllers{$_} ne ''
 				 && $portals{$key}->{ $controllers{$_} } > 0 )
 			{
 				$player = $controllers{$_};
@@ -415,7 +416,9 @@ sub out_kml {
 				  . $_->{'target'}
 				  . "</name>\n";
 			} elsif ( defined $_->{'player'} ) {
-				print $file "    <styleUrl>#linknocontroller</styleUrl>\n";
+				print $file "    <styleUrl>#link"
+				. $_->{'player'}
+				. "</styleUrl>\n";
 				print $file "    <name>"
 				  . $_->{'player'}
 				  . " key link to "
@@ -468,6 +471,31 @@ sub out_orders {
 				if ( defined( @{ $orders{$_} } ) ) {
 					for ( @{ $orders{$_} } ) {
 						next unless defined $_->{'player'};
+						print $file "  -> " . $_->{'target'};
+						print $file " ("
+						  . $portals{ $_->{target} }->{nick} . ")"
+						  if $portals{ $_->{target} }->{nick} ne "";
+						print $file "\n";
+						$total_links++;
+					}
+				} else {
+					print $file "  ! No Outgoing Links !\n";
+				}
+				print $file "\n";
+			}
+		}
+		else {
+			for ( sort keys %portals ) {
+				chomp;
+				print $file "$_";
+				print $file " (" . $portals{$_}->{nick} . ")"
+				  if defined $portals{$_}->{nick} && $portals{$_}->{nick} ne "";
+				print $file "\n";
+				if ( defined( @{ $orders{$_} } ) ) {
+					for ( @{ $orders{$_} } ) {
+						unless (defined $_->{'player'} && ($_->{'player'} eq $player)) {
+							next;
+						}
 						print $file "  -> " . $_->{'target'};
 						print $file " ("
 						  . $portals{ $_->{target} }->{nick} . ")"
